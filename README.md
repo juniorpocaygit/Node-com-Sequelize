@@ -1,1 +1,1 @@
-# Projeto de como utilizar Node com Sequelize, criado no curso de Node.
+# Projeto de integração do Node com MySql, realizado no curso de Node.
