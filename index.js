@@ -3,6 +3,7 @@ const exphbs = require('express-handlebars')
 const conn = require('./db/conn')
 
 const User = require('./models/User')
+const Address = require('./models/Address')
 
 const app = express()
 
@@ -64,9 +65,9 @@ app.get('/users/edit/:id', async (req,res) => {
 
     const id = req.params.id
 
-    const user = await User.findOne({raw: true, where: {id: id}})
+    const user = await User.findOne({ include: Address, where: {id: id}})
 
-    res.render('useredit', { user })
+    res.render('useredit', { user: user.get({ plain: true }) })
 
 })
 
@@ -95,8 +96,6 @@ app.post ('/users/update', async (req,res) => {
     res.redirect('/')
 })
 
-
-
 app.get ('/', async (req,res) => {
 
     const users = await User.findAll({raw: true})
@@ -104,7 +103,42 @@ app.get ('/', async (req,res) => {
     res.render('home', { users: users})
 })
 
-conn.sync().then(() => {
+app.post('/address/create', async (req,res) => {
+
+    const UserId = req.body.UserId
+    const street = req.body.street
+    const number = req.body.number
+    const city = req.body.city
+
+    const address = {
+        UserId,
+        street,
+        number,
+        city,
+    }
+
+    await Address.create(address)
+
+    res.redirect(`/users/edit/${UserId}`)
+
+})
+
+app.post('/address/delete', async (req,res) => {
+
+    const UserId = req.body.UserId
+    const id = req.body.id
+
+   await Address.destroy({
+        where: {id: id}
+    })
+
+   res.redirect(`/users/edit/${UserId}`) 
+})
+
+conn
+    .sync()
+    //.sync({force:true})
+    .then(() => {
     app.listen(3000)
 })
 .catch((err) => console.log(err))
